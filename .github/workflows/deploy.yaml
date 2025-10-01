@@ -1,31 +1,57 @@
-name: CI
+name: application
 on: [push, workflow_dispatch]
 jobs:
-    code:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v3
-            - name: Install dependencies
-              run: npm ci
-            - name: Run Lint
-              run: npm run lint      
-            - name: Run tests
-              run: npm test  
-    deploy:
-        needs: code
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v3
-            - name: Set up Node.js
-              uses: actions/setup-node@v3
-              with:
-                node-version: '18'
-            - name: Install dependencies
-              run: npm install
-            - name: Build
-              run: npm run build
-            - name: Deploy app
-              run: echo "Deploying new app"                 
-
+  app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: npm install
+      - name: Lint code
+        run: npm run lint  
+  test:
+    needs: app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        run: npm test
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: npm install
+      - name: Build application
+        run: npm run build
+      - name: Upload artifact
+        uses:  actions/upload-artifact@v4
+        with:
+          name: dist-file
+          path: dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      status: Deployment completed
+    steps:
+      - name: Get artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: dist-file
+      - name: Output files
+        run: ls
+      - name: Deploy application
+        run: echo "Deploying application..."    
+  output:      
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: output
+        run: echo "$status"
