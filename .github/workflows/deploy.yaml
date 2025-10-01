@@ -1,5 +1,7 @@
 name: application
 on: [push, workflow_dispatch]
+env:
+ status: Deployment completed
 jobs:
   app:
     runs-on: ubuntu-latest
@@ -38,8 +40,6 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    env:
-      status: Deployment completed
     steps:
       - name: Get artifact
         uses: actions/download-artifact@v5
